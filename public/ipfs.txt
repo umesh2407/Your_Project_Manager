@@ -1,0 +1,75 @@
+pragma solidity ^0.8.0;
+
+import "ipfs-http-client/ src/index.sol";
+
+contract IPFSUploader {
+  // Create an instance of the IPFS library
+  IpfsHttpClient ipfs = IpfsHttpClient("localhost", 5001);
+
+  // Function to upload a file to IPFS
+  function uploadFile(bytes memory file) public returns (bytes32) {
+    // Use the IPFS library to add the file to the IPFS network
+    bytes32 ipfsHash = ipfs.add(file);
+
+    // Return the IPFS hash of the uploaded file
+    return ipfsHash;
+  }
+}
+
+
+
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+</head>
+
+
+
+<body>
+  <form id="upload-form">
+    <label for="file-input">Choose a file to upload:</label>
+    <input type="file" id="file-input">
+    <button type="submit">Upload</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    // Initialize Web3.js with the provider of your choice
+    const web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
+
+    // Set the contract address and ABI
+    const contractAddress = "0x123456789...";
+    const contractABI = [...];
+
+    // Create an instance of the contract using the address and ABI
+    const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+    // Listen for form submissions
+    document.getElementById("upload-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      // Get the file input element and the selected file
+      const fileInput = document.getElementById("file-input");
+      const file = fileInput.files[0];
+
+      // Create a FileReader to read the file contents
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(file);
+
+      // Wait for the FileReader to load the file
+      await new Promise((resolve) => {
+        reader.onload = resolve;
+      });
+
+      // Convert the file to a bytes array
+      const fileBytes = new Uint8Array(reader.result);
+
+      // Call the contract's uploadFile function to upload the file to IPFS
+      const result = await contract.methods.uploadFile(fileBytes).send({ from: web3.eth.defaultAccount });
+
+      // Display the result on the page
+      const resultElement = document.getElementById("result");
+      resultElement.innerHTML = `File uploaded with IPFS hash ${result.events.FileUploaded.returnValues.ipfsHash}`;
+    });
+  </script>
+</body>
